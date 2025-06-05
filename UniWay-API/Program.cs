@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<UniWayAPIContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("UniWayAPIContext") ?? throw new InvalidOperationException("Connection string 'UniWayAPIContext' not found.")));
 
 // Add services to the container.
 
