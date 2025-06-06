@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace UniWay_API.Models
 {
@@ -15,7 +16,8 @@ namespace UniWay_API.Models
         public string Destino { get; set; }
         [Required]
         public DateTime FechaHoraSalida { get; set; }
-        [Range(0.01, 999.99)]
+        [Required]
+        [Precision(10, 2)]
         public decimal Precio { get; set; }
         [Required]
         public int AsientosDisponibles { get; set; }
