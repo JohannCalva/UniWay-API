@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniWay_API.Models;
+using UniWay_API.Models.DTO.Viaje;
 
 namespace UniWay_API.Controllers
 {
@@ -22,34 +18,67 @@ namespace UniWay_API.Controllers
 
         // GET: api/Viajes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Viaje>>> GetViaje()
+        public async Task<ActionResult<IEnumerable<ViajeReadDTO>>> GetViaje()
         {
-            return await _context.Viaje.ToListAsync();
+            var viajes = await _context.Viaje
+                .ToListAsync();
+
+            var viajeDTOs = viajes.Select(v => new ViajeReadDTO
+            {
+                Id = v.Id,
+                Origen = v.Origen,
+                Destino = v.Destino,
+                FechaHoraSalida = v.FechaHoraSalida,
+                Precio = v.Precio,
+                AsientosDisponibles = v.AsientosDisponibles,
+                ConductorId = v.ConductorId,
+            }).ToList();
+
+            return Ok(viajeDTOs);
         }
 
         // GET: api/Viajes/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Viaje>> GetViaje(int id)
+        public async Task<ActionResult<ViajeReadDTO>> GetViaje(int id)
         {
-            var viaje = await _context.Viaje.FindAsync(id);
+            var viaje = await _context.Viaje
+                .FirstOrDefaultAsync(v => v.Id == id);
 
             if (viaje == null)
             {
                 return NotFound();
             }
 
-            return viaje;
+            var dto = new ViajeReadDTO
+            {
+                Id = viaje.Id,
+                Origen = viaje.Origen,
+                Destino = viaje.Destino,
+                FechaHoraSalida = viaje.FechaHoraSalida,
+                Precio = viaje.Precio,
+                AsientosDisponibles = viaje.AsientosDisponibles,
+                ConductorId = viaje.ConductorId,
+            };
+
+            return Ok(dto);
         }
 
         // PUT: api/Viajes/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutViaje(int id, Viaje viaje)
+        public async Task<IActionResult> PutViaje(int id, ViajeUpdateDTO viajeDTO)
         {
-            if (id != viaje.Id)
+            var viaje = await _context.Viaje.FindAsync(id);
+            if (viaje == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            // Manualmente actualizar los campos (excepto el ConductorId)
+            viaje.Origen = viajeDTO.Origen;
+            viaje.Destino = viajeDTO.Destino;
+            viaje.FechaHoraSalida = viajeDTO.FechaHoraSalida;
+            viaje.Precio = viajeDTO.Precio;
+            viaje.AsientosDisponibles = viajeDTO.AsientosDisponibles;
 
             _context.Entry(viaje).State = EntityState.Modified;
 
@@ -73,14 +102,34 @@ namespace UniWay_API.Controllers
         }
 
         // POST: api/Viajes
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Viaje>> PostViaje(Viaje viaje)
+        public async Task<ActionResult<ViajeReadDTO>> PostViaje(ViajeCreateDTO viajeDTO)
         {
+            var viaje = new Viaje
+            {
+                Origen = viajeDTO.Origen,
+                Destino = viajeDTO.Destino,
+                FechaHoraSalida = viajeDTO.FechaHoraSalida,
+                Precio = viajeDTO.Precio,
+                AsientosDisponibles = viajeDTO.AsientosDisponibles,
+                ConductorId = viajeDTO.ConductorId
+            };
+
             _context.Viaje.Add(viaje);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetViaje", new { id = viaje.Id }, viaje);
+            var viajeReadDTO = new ViajeReadDTO
+            {
+                Id = viaje.Id,
+                Origen = viaje.Origen,
+                Destino = viaje.Destino,
+                FechaHoraSalida = viaje.FechaHoraSalida,
+                Precio = viaje.Precio,
+                AsientosDisponibles = viaje.AsientosDisponibles,
+                ConductorId = viaje.ConductorId
+            };
+
+            return CreatedAtAction("GetViaje", new { id = viaje.Id }, viajeReadDTO);
         }
 
         // DELETE: api/Viajes/5
