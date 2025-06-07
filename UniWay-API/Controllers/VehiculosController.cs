@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniWay_API.Models;
+using UniWay_API.Models.DTO.Vehiculo;
 
 namespace UniWay_API.Controllers
 {
@@ -22,14 +21,26 @@ namespace UniWay_API.Controllers
 
         // GET: api/Vehiculos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Vehiculo>>> GetVehiculo()
+        public async Task<ActionResult<IEnumerable<VehiculoDTO>>> GetVehiculo()
         {
-            return await _context.Vehiculo.ToListAsync();
+            var vehiculos = await _context.Vehiculo.ToListAsync();
+
+            var vehiculoDTOs = vehiculos.Select(v => new VehiculoDTO
+            {
+                Id = v.Id,
+                Marca = v.Marca,
+                Modelo = v.Modelo,
+                Color = v.Color,
+                Placa = v.Placa,
+                ConductorId = v.ConductorId
+            });
+
+            return Ok(vehiculoDTOs);
         }
 
         // GET: api/Vehiculos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Vehiculo>> GetVehiculo(int id)
+        public async Task<ActionResult<VehiculoDTO>> GetVehiculo(int id)
         {
             var vehiculo = await _context.Vehiculo.FindAsync(id);
 
@@ -38,18 +49,34 @@ namespace UniWay_API.Controllers
                 return NotFound();
             }
 
-            return vehiculo;
+            var dto = new VehiculoDTO
+            {
+                Id = vehiculo.Id,
+                Marca = vehiculo.Marca,
+                Modelo = vehiculo.Modelo,
+                Color = vehiculo.Color,
+                Placa = vehiculo.Placa,
+                ConductorId = vehiculo.ConductorId
+            };
+
+            return Ok(dto);
         }
 
         // PUT: api/Vehiculos/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVehiculo(int id, Vehiculo vehiculo)
+        public async Task<IActionResult> PutVehiculo(int id, VehiculoUpdateDTO dto)
         {
-            if (id != vehiculo.Id)
+            var vehiculo = await _context.Vehiculo.FindAsync(id);
+            if (vehiculo == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            // Mapear campos desde el DTO
+            vehiculo.Marca = dto.Marca;
+            vehiculo.Modelo = dto.Modelo;
+            vehiculo.Color = dto.Color;
+            vehiculo.Placa = dto.Placa;
 
             _context.Entry(vehiculo).State = EntityState.Modified;
 
@@ -73,14 +100,32 @@ namespace UniWay_API.Controllers
         }
 
         // POST: api/Vehiculos
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Vehiculo>> PostVehiculo(Vehiculo vehiculo)
+        public async Task<ActionResult<VehiculoDTO>> PostVehiculo(VehiculoCreateDTO dto)
         {
+            var vehiculo = new Vehiculo
+            {
+                Marca = dto.Marca,
+                Modelo = dto.Modelo,
+                Color = dto.Color,
+                Placa = dto.Placa,
+                ConductorId = dto.ConductorId
+            };
+
             _context.Vehiculo.Add(vehiculo);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetVehiculo", new { id = vehiculo.Id }, vehiculo);
+            var resultDto = new VehiculoDTO
+            {
+                Id = vehiculo.Id,
+                Marca = vehiculo.Marca,
+                Modelo = vehiculo.Modelo,
+                Color = vehiculo.Color,
+                Placa = vehiculo.Placa,
+                ConductorId = vehiculo.ConductorId
+            };
+
+            return CreatedAtAction("GetVehiculo", new { id = vehiculo.Id }, resultDto);
         }
 
         // DELETE: api/Vehiculos/5
