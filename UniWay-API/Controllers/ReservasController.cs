@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniWay_API.Models;
+using UniWay_API.Models.DTO.Reserva;
 
 namespace UniWay_API.Controllers
 {
@@ -22,34 +18,53 @@ namespace UniWay_API.Controllers
 
         // GET: api/Reservas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Reserva>>> GetReserva()
+        public async Task<ActionResult<IEnumerable<ReservaDTO>>> GetReserva()
         {
-            return await _context.Reserva.ToListAsync();
+            var reservas = await _context.Reserva.ToListAsync();
+
+            var reservasDTO = reservas.Select(r => new ReservaDTO
+            {
+                Id = r.Id,
+                Estado = r.Estado,
+                MetodoPago = r.MetodoPago,
+                ViajeId = r.ViajeId,
+                PasajeroId = r.PasajeroId
+            });
+
+            return Ok(reservasDTO);
         }
 
         // GET: api/Reservas/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Reserva>> GetReserva(int id)
+        public async Task<ActionResult<ReservaDTO>> GetReserva(int id)
         {
-            var reserva = await _context.Reserva.FindAsync(id);
+            var r = await _context.Reserva.FindAsync(id);
 
-            if (reserva == null)
-            {
+            if (r == null)
                 return NotFound();
-            }
 
-            return reserva;
+            var reservaDTO = new ReservaDTO
+            {
+                Id = r.Id,
+                Estado = r.Estado,
+                MetodoPago = r.MetodoPago,
+                ViajeId = r.ViajeId,
+                PasajeroId = r.PasajeroId
+            };
+
+            return Ok(reservaDTO);
         }
 
         // PUT: api/Reservas/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutReserva(int id, Reserva reserva)
+        public async Task<IActionResult> PutReserva(int id, ReservaUpdateDTO dto)
         {
-            if (id != reserva.Id)
-            {
-                return BadRequest();
-            }
+            var reserva = await _context.Reserva.FindAsync(id);
+            if (reserva == null)
+                return NotFound();
+
+            reserva.Estado = dto.Estado;
+            reserva.MetodoPago = dto.MetodoPago;
 
             _context.Entry(reserva).State = EntityState.Modified;
 
@@ -60,29 +75,42 @@ namespace UniWay_API.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!ReservaExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
         }
 
         // POST: api/Reservas
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Reserva>> PostReserva(Reserva reserva)
+        public async Task<ActionResult<ReservaDTO>> PostReserva(ReservaCreateDTO dto)
         {
+            var reserva = new Reserva
+            {
+                Estado = dto.Estado,
+                MetodoPago = dto.MetodoPago,
+                ViajeId = dto.ViajeId,
+                PasajeroId = dto.PasajeroId
+            };
+
             _context.Reserva.Add(reserva);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReserva", new { id = reserva.Id }, reserva);
+            var reservaDTO = new ReservaDTO
+            {
+                Id = reserva.Id,
+                Estado = reserva.Estado,
+                MetodoPago = reserva.MetodoPago,
+                ViajeId = reserva.ViajeId,
+                PasajeroId = reserva.PasajeroId
+            };
+
+            return CreatedAtAction(nameof(GetReserva), new { id = reserva.Id }, reservaDTO);
         }
 
+        
         // DELETE: api/Reservas/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReserva(int id)
@@ -98,7 +126,6 @@ namespace UniWay_API.Controllers
 
             return NoContent();
         }
-
         private bool ReservaExists(int id)
         {
             return _context.Reserva.Any(e => e.Id == id);
