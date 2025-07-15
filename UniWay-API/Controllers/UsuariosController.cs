@@ -28,6 +28,7 @@ namespace UniWay_API.Controllers
                     Nombre = u.Nombre,
                     Correo = u.Correo,
                     Telefono = u.Telefono,
+                    Contrasena = u.Contrasena,
                     EsConductor = u.EsConductor
                 }).ToListAsync();
 
@@ -52,6 +53,7 @@ namespace UniWay_API.Controllers
                 Nombre = usuario.Nombre,
                 Correo = usuario.Correo,
                 Telefono = usuario.Telefono,
+                Contrasena = usuario.Contrasena,
                 EsConductor = usuario.EsConductor
             };
 
@@ -82,6 +84,7 @@ namespace UniWay_API.Controllers
                 Nombre = usuario.Nombre,
                 Correo = usuario.Correo,
                 Telefono = usuario.Telefono,
+                Contrasena = usuario.Contrasena,
                 EsConductor = usuario.EsConductor
             };
 
